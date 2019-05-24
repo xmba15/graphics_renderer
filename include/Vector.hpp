@@ -1,7 +1,7 @@
 /**
- * @file    Geometry.hpp
+ * @file    Vector.hpp
  *
- * @brief   Construction of Necessary Classes for Graphics
+ * @brief   Construction of Vector Container
  *
  * @author  btran
  *
