@@ -32,12 +32,13 @@ class TestDataContainer : public ::testing::Test
     }
 
     time_t start_time_;
+
+    using Vec4d = graphics::DataContainer<double, 4>;
 };
 
-TEST(TestDataContainer, TestInitialization)
+TEST_F(TestDataContainer, TestInitialization)
 {
-    using Vec4d = graphics::DataContainer<double, 4>;
-    double data[4] = {1, 2, 3, 4};
+    double data[] = {1, 2, 3, 4};
     Vec4d v(data);
     EXPECT_EQ(v.size(), 4);
 
@@ -46,4 +47,28 @@ TEST(TestDataContainer, TestInitialization)
     it += 4;
 
     EXPECT_EQ(it, v.end());
+}
+
+TEST_F(TestDataContainer, TestArithmeticOperators)
+{
+    double data1[] = {1, 2, 3, 4};
+    double data2[] = {-1, -2, 3, 4};
+    double dataSum[] = {0, 0, 6, 8};
+
+    Vec4d v1(data1), v2(data2), vSum(dataSum);
+
+    {
+        EXPECT_EQ(vSum, v1 + v2);
+    }
+
+    {
+        vSum /= 2;
+        double expected[] = {0, 0, 3, 4};
+
+        EXPECT_EQ(vSum, Vec4d(expected));
+
+        double norm = vSum.l2norm();
+        
+        EXPECT_EQ(norm, 5);
+    }
 }
