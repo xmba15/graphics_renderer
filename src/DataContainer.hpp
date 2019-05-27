@@ -16,6 +16,7 @@
 #ifndef DATACONTAINER_HPP_
 #define DATACONTAINER_HPP_
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
@@ -33,6 +34,8 @@ template <typename T, size_t DIM = 3> class DataContainer
     DataContainer();
     explicit DataContainer(T *data);
 
+    DataContainer(const DataContainer &other);
+
     virtual ~DataContainer();
 
     T &operator[](size_t i);
@@ -41,16 +44,59 @@ template <typename T, size_t DIM = 3> class DataContainer
     virtual DataContainer &operator=(const DataContainer &other);
     virtual bool operator==(const DataContainer &other);
 
-    virtual DataContainer &operator+(const DataContainer &other);
-    virtual DataContainer &operator-(const DataContainer &other);
+    virtual DataContainer &operator+=(const DataContainer &other);
+    virtual DataContainer &operator-=(const DataContainer &other);
 
-    virtual DataContainer &operator*(T scalar);
-    virtual DataContainer &operator/(T scalar);
+    virtual DataContainer &operator*=(T scalar);
+    virtual DataContainer &operator/=(T scalar);
 
     virtual T dot(const DataContainer &other);
 
     double l2norm() const;
     void l2normalize();
+
+    friend bool operator==(const DataContainer<T, DIM> &first,
+                           const DataContainer<T, DIM> &second)
+    {
+        for (size_t i = 0; i < DIM; ++i) {
+            if (first._data[i] != second._data[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    friend DataContainer<T, DIM> operator+(const DataContainer<T, DIM> &first,
+                                           const DataContainer<T, DIM> &second)
+    {
+        DataContainer<T, DIM> other(first);
+        other += second;
+        return other;
+    }
+
+    friend DataContainer<T, DIM> operator-(const DataContainer<T, DIM> &first,
+                                           const DataContainer<T, DIM> &second)
+    {
+        DataContainer<T, DIM> other(first);
+        other -= second;
+        return other;
+    }
+
+    friend DataContainer<T, DIM> operator*(const DataContainer<T, DIM> &dc,
+                                           T scalar)
+    {
+        DataContainer<T, DIM> other(dc);
+        dc *= scalar;
+        return dc;
+    }
+
+    friend DataContainer<T, DIM> operator/(const DataContainer<T, DIM> &dc,
+                                           T scalar)
+    {
+        DataContainer<T, DIM> other(dc);
+        dc /= scalar;
+        return dc;
+    }
 
     iterator begin()
     {
@@ -77,7 +123,8 @@ template <typename T, size_t DIM = 3> class DataContainer
         return DIM;
     }
 
-    friend std::ostream &operator<<(std::ostream &os, const DataContainer &dc)
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const DataContainer<T, DIM> &dc)
     {
         for (auto it = dc.begin(); it != dc.end(); ++it) {
             os << *it << "\n";
@@ -93,9 +140,7 @@ template <typename T, size_t DIM> DataContainer<T, DIM>::DataContainer()
 {
     this->_data = new T[DIM];
 
-    for (size_t i = 0; i < DIM; ++i) {
-        this->_data[i] = T();
-    }
+    std::fill(this->_data, this->_data + DIM, T());
 }
 
 template <typename T, size_t DIM> DataContainer<T, DIM>::DataContainer(T *data)
@@ -103,9 +148,14 @@ template <typename T, size_t DIM> DataContainer<T, DIM>::DataContainer(T *data)
     assert(data != nullptr);
     this->_data = new T[DIM];
 
-    for (size_t i = 0; i < DIM; ++i) {
-        _data[i] = data[i];
-    }
+    std::copy(data, data + DIM, this->_data);
+}
+
+template <typename T, size_t DIM>
+DataContainer<T, DIM>::DataContainer(const DataContainer &other)
+{
+    this->_data = new T[DIM];
+    std::copy(other._data, other._data + DIM, this->_data);
 }
 
 template <typename T, size_t DIM> DataContainer<T, DIM>::~DataContainer()
@@ -115,14 +165,18 @@ template <typename T, size_t DIM> DataContainer<T, DIM>::~DataContainer()
 
 template <typename T, size_t DIM> T &DataContainer<T, DIM>::operator[](size_t i)
 {
-    assert(i < DIM);
+    if (i > DIM) {
+        throw std::out_of_range("DataContainer::operator[]: out of range");
+    }
     return this->_data[i];
 }
 
 template <typename T, size_t DIM>
 const T &DataContainer<T, DIM>::operator[](size_t i) const
 {
-    assert(i < DIM);
+    if (i > DIM) {
+        throw std::out_of_range("DataContainer::operator[]: out of range");
+    }
     return this->_data[i];
 }
 
@@ -132,9 +186,7 @@ operator=(const DataContainer &other)
 {
     if (this != &other) {
         this->_data = new T[DIM];
-        for (size_t i = 0; i < DIM; ++i) {
-            this->_data[i] = other._data[i];
-        }
+        std::copy(other._data, other._data + DIM, this->_data);
     }
 
     return *this;
@@ -148,12 +200,13 @@ bool DataContainer<T, DIM>::operator==(const DataContainer &other)
             return false;
         }
     }
+
     return true;
 }
 
 template <typename T, size_t DIM>
 DataContainer<T, DIM> &DataContainer<T, DIM>::
-operator+(const DataContainer &other)
+operator+=(const DataContainer &other)
 {
     for (size_t i = 0; i < DIM; ++i) {
         this->_data[i] += other._data[i];
@@ -163,7 +216,7 @@ operator+(const DataContainer &other)
 
 template <typename T, size_t DIM>
 DataContainer<T, DIM> &DataContainer<T, DIM>::
-operator-(const DataContainer &other)
+operator-=(const DataContainer &other)
 {
     for (size_t i = 0; i < DIM; ++i) {
         this->_data[i] -= other._data[i];
@@ -172,7 +225,7 @@ operator-(const DataContainer &other)
 }
 
 template <typename T, size_t DIM>
-DataContainer<T, DIM> &DataContainer<T, DIM>::operator*(T scalar)
+DataContainer<T, DIM> &DataContainer<T, DIM>::operator*=(T scalar)
 {
     for (size_t i = 0; i < DIM; ++i) {
         this->_data[i] *= scalar;
@@ -181,7 +234,7 @@ DataContainer<T, DIM> &DataContainer<T, DIM>::operator*(T scalar)
 }
 
 template <typename T, size_t DIM>
-DataContainer<T, DIM> &DataContainer<T, DIM>::operator/(T scalar)
+DataContainer<T, DIM> &DataContainer<T, DIM>::operator/=(T scalar)
 {
     assert(scalar != T());
 
@@ -205,9 +258,8 @@ T DataContainer<T, DIM>::dot(const DataContainer &other)
 template <typename T, size_t DIM> double DataContainer<T, DIM>::l2norm() const
 {
     double accum = 0;
-    for (size_t i = 0; i < DIM; ++i) {
-        accum += this->_data[i];
-    }
+    for (auto it = this->begin(); it != this->end(); ++it)
+        accum += (*it) * (*it);
 
     return std::sqrt(accum);
 }
