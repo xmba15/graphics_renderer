@@ -1,6 +1,7 @@
 add_executable(
   unit_tests
   TestDataContainer.cpp
+  TestVector.cpp
   )
 
 target_link_libraries(

@@ -68,7 +68,7 @@ TEST_F(TestDataContainer, TestArithmeticOperators)
         EXPECT_EQ(vSum, Vec4d(expected));
 
         double norm = vSum.l2norm();
-        
+
         EXPECT_EQ(norm, 5);
     }
 }

@@ -27,37 +27,7 @@ class Vector : public DataContainer<T, DIM>
  public:
     using Ptr = std::shared_ptr<Vector>;
 
-    Vector() : DataContainer<T, DIM>()
-    {
-    }
-
-    explicit Vector(T *data) : DataContainer<T, DIM>(data)
-    {
-    }
-
-    Vector &operator+(const Vector &other)
-    {
-        this->DataContainer<T, DIM>::operator+(other);
-        return *this;
-    }
-
-    Vector &operator-(const Vector &other)
-    {
-        this->DataContainer<T, DIM>::operator-(other);
-        return *this;
-    }
-
-    Vector &operator*(T scalar)
-    {
-        this->DataContainer<T, DIM>::operator*(scalar);
-        return *this;
-    }
-
-    Vector &operator/(T scalar)
-    {
-        this->DataContainer<T, DIM>::operator/(scalar);
-        return *this;
-    }
+    using DataContainer<T, DIM>::DataContainer;
 
     const T &x() const
     {

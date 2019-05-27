@@ -65,7 +65,8 @@ Matrix<T, DIM>::Matrix(size_t width, size_t height)
     this->_width = width;
     this->_height = height;
     this->_data = new VectorType[width * height];
-    for (size_t j = 0; j < _height; ++j) {
+
+    for (size_t j = 0; j < height; ++j) {
         for (size_t i = 0; i < width; ++i) {
             T curPixel[DIM] = {j / static_cast<T>(height),
                                i / static_cast<T>(width), 0};
@@ -78,10 +79,7 @@ template <typename T> class Image : public Matrix<T>
 {
  public:
     using Ptr = std::shared_ptr<Image>;
-
-    Image(size_t width, size_t height) : Matrix<T>(width, height)
-    {
-    }
+    using Matrix<T>::Matrix;
 
     void render(const std::string &output = "out.ppm");
 };
